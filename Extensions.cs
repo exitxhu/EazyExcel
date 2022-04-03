@@ -51,7 +51,7 @@ namespace EazyExcel
                     tits.Add((contit, i + 1, props[i]));
 
             }
-            for (int i = 1; i < ws.LastRowUsed().RowNumber(); i++)
+            for (int i = 2; i <= ws.LastRowUsed().RowNumber(); i++)
             {
                 T temp = new();
                 var c = false;
