@@ -34,11 +34,14 @@ namespace EazyExcel
             worksheet.Columns().AdjustToContents();
             workbook.SaveAs(mem);
         }
+        public static IXLWorkbook ToExcelWorkbook(this byte[] source)
+        {
+            var result = new XLWorkbook(new MemoryStream(source));
+            return result;
+        }
         public static List<T> ToList<T>(this IXLWorksheet ws) where T : new()
         {
             var result = new List<T>();
-
-
             var props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             var tits = new List<(string, int, PropertyInfo)>();
             for (int i = 0; i < props.Count(); i++)
@@ -54,7 +57,7 @@ namespace EazyExcel
                 var c = false;
                 foreach (var tit in tits)
                 {
-                    var fh = ws.Cell(i + 1, tit.Item2).Value;
+                    var fh = ws.Cell(i, tit.Item2).Value;
                     if (TryChangeType(fh, Nullable.GetUnderlyingType(tit.Item3.PropertyType) ?? tit.Item3.PropertyType, out var obje))
                     {
                         c = true;
