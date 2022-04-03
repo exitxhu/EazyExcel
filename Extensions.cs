@@ -47,8 +47,9 @@ namespace EazyExcel
             for (int i = 0; i < props.Count(); i++)
             {
                 var contit = ws.Cell(1, i + 1).Value?.ToString()!;
-                if (props.Any(n => n.Name == contit))
-                    tits.Add((contit, i + 1, props[i]));
+                var t = props.SingleOrDefault(n => n.Name == contit);
+                if (t is not null)
+                    tits.Add((contit, i + 1, t));
 
             }
             for (int i = 2; i <= ws.LastRowUsed().RowNumber(); i++)
@@ -73,7 +74,12 @@ namespace EazyExcel
         {
             try
             {
-                result = Convert.ChangeType(value, conversionType);
+                if (conversionType.IsEnum)
+                {
+                    result = Enum.Parse(conversionType, value.ToString());
+                }
+                else
+                    result = Convert.ChangeType(value, conversionType);
                 return true;
             }
             catch
