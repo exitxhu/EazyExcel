@@ -31,7 +31,7 @@ namespace EazyExcel
             var worksheet = workbook.Worksheets.Add(sheetName);
 
             worksheet.Cell(1, 1).InsertTable(@this);
-            worksheet.Columns().AdjustToContents();
+            //worksheet.Columns().AdjustToContents();
             workbook.SaveAs(mem);
         }
         public static IXLWorkbook ToExcelWorkbook(this byte[] source)
