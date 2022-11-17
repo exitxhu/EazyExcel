@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using System.Data;
 using System.Reflection;
 
 namespace EazyExcel
@@ -88,5 +89,79 @@ namespace EazyExcel
                 return false;
             }
         }
+
+        public static DataTable CreateDataTableFromAnyCollection<T>(IEnumerable<T> list)
+        {
+            Type type = typeof(T);
+            var properties = type.GetProperties();
+
+            DataTable dataTable = new DataTable();
+            foreach (PropertyInfo info in properties)
+            {
+                dataTable.Columns.Add(new DataColumn(info.Name, Nullable.GetUnderlyingType(info.PropertyType) ?? info.PropertyType));
+            }
+
+            foreach (T entity in list)
+            {
+                object[] values = new object[properties.Length];
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    values[i] = properties[i].GetValue(entity, null);
+                }
+
+                dataTable.Rows.Add(values);
+            }
+
+            return dataTable;
+        }
+
+
+        /// <summary>
+        /// build an excel file as stream
+        /// </summary>
+        /// <param name="mem"></param>
+        /// <param name="sheetName"></param>
+        public static void ToExcelTable<T>(this IEnumerable<T> @this, Stream mem, string sheetName = "Sample Sheet")
+        {
+            
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add(sheetName);
+
+
+            var properties = (typeof(T)).GetProperties()
+                .Select(a => new
+                {
+                    Attribute = (typeof(T).GetProperty(a.Name).GetCustomAttributes(false).Where(x => x.GetType().Name == nameof(ColumnNameOrderAttribute)).FirstOrDefault() as ColumnNameOrderAttribute) ?? new ColumnNameOrderAttribute(a.Name, 0),
+                    Property = a
+                })
+
+                .OrderBy(a => a.Attribute.Order)
+                .ToList();
+
+
+            DataTable dataTable = new DataTable();
+
+            foreach (var info in properties)
+            {
+                dataTable.Columns.Add(new DataColumn(
+                    info.Attribute != null ? info.Attribute.DisplayName : info.Property.Name,
+                    Nullable.GetUnderlyingType(info.Property.PropertyType) ?? info.Property.PropertyType));
+            }
+
+            foreach (var entity in @this)
+            {
+                object[] values = new object[properties.Count];
+                for (int i = 0; i < properties.Count; i++)
+                {
+                    values[i] = properties[i].Property.GetValue(entity, null);
+                }
+
+                dataTable.Rows.Add(values);
+            }
+            worksheet.Cell(1, 1).InsertTable(dataTable);
+            worksheet.Columns().AdjustToContents();
+            workbook.SaveAs(mem);
+        }
+
     }
 }
