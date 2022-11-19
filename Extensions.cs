@@ -1,4 +1,9 @@
-﻿using ClosedXML.Excel;
+﻿using ClosedXML;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.EMMA;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Reflection;
 
@@ -123,7 +128,7 @@ namespace EazyExcel
         /// <param name="sheetName"></param>
         public static void ToExcelTable<T>(this IEnumerable<T> @this, Stream mem, string sheetName = "Sample Sheet")
         {
-            
+
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add(sheetName);
 
@@ -143,9 +148,15 @@ namespace EazyExcel
 
             foreach (var info in properties)
             {
-                dataTable.Columns.Add(new DataColumn(
-                    info.Attribute != null ? info.Attribute.DisplayName : info.Property.Name,
-                    Nullable.GetUnderlyingType(info.Property.PropertyType) ?? info.Property.PropertyType));
+                if (info.Property.PropertyType.BaseType == typeof(Enum))
+                {
+                    dataTable.Columns.Add(new DataColumn(
+                        info.Attribute != null ? info.Attribute.DisplayName : info.Property.Name));
+                }
+                else
+                    dataTable.Columns.Add(new DataColumn(
+                        info.Attribute != null ? info.Attribute.DisplayName : info.Property.Name,
+                        Nullable.GetUnderlyingType(info.Property.PropertyType) ?? info.Property.PropertyType));
             }
 
             foreach (var entity in @this)
@@ -153,7 +164,17 @@ namespace EazyExcel
                 object[] values = new object[properties.Count];
                 for (int i = 0; i < properties.Count; i++)
                 {
-                    values[i] = properties[i].Property.GetValue(entity, null);
+                    if (properties[i].Property.PropertyType.BaseType == typeof(Enum))
+                    {
+                        var enumValue = GetDescription(properties[i].Property.PropertyType, properties[i].Property.GetValue(entity, null).ToString())?? properties[i].Property.GetValue(entity, null).ToString();
+
+                        values[i] = enumValue;
+                    }
+                    else
+                    {
+                        values[i] = properties[i].Property.GetValue(entity, null);
+                    }
+
                 }
 
                 dataTable.Rows.Add(values);
@@ -161,6 +182,32 @@ namespace EazyExcel
             worksheet.Cell(1, 1).InsertTable(dataTable);
             worksheet.Columns().AdjustToContents();
             workbook.SaveAs(mem);
+        }
+
+
+
+        static string GetDescription(Type enumType, string field)
+        {
+            FieldInfo fieldInfo = enumType.GetField(field);
+            if (fieldInfo == null)
+                return string.Empty;
+
+            foreach (var attribute in fieldInfo.GetCustomAttributes())
+            {
+                if (attribute == null)
+                    continue;
+                if (attribute is DescriptionAttribute descAtt)
+                    return descAtt.Description;
+                else if (attribute.ToString().IndexOf("Display", StringComparison.Ordinal) > 0)
+                {
+                    var prop = attribute.GetType().GetProperty("Name");
+                    if (prop == null)
+                        continue;
+                    return Convert.ToString(prop.GetValue(attribute));
+                }
+            }
+
+            return null;
         }
 
     }
