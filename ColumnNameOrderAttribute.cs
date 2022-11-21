@@ -24,6 +24,14 @@ namespace EazyExcel
 			set { _order = value; }
 		}
 
+		private Type _resourceType;
+
+		public Type ResourceType
+		{
+			get { return _resourceType; }
+			set { _resourceType = value; }
+		}
+
 		public ColumnNameOrderAttribute(string displayName,int order)
 		{
 			_displayName = displayName;
@@ -35,6 +43,11 @@ namespace EazyExcel
             _displayName = displayName;
         }
 
-
+        public ColumnNameOrderAttribute(string displayName, int order,Type resourceType)
+        {
+            _displayName = displayName;
+            _order = order;
+			_resourceType = resourceType;
+        }
     }
 }

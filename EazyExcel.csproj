@@ -9,7 +9,7 @@
     <PackageProjectUrl>https://github.com/exitxhu/EazyExcel</PackageProjectUrl>
     <RepositoryUrl>https://github.com/exitxhu/EazyExcel</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>$(VersionPrefix)2.1.0</Version>
+    <Version>$(VersionPrefix)2.2.1</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 

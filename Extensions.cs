@@ -148,14 +148,29 @@ namespace EazyExcel
 
             foreach (var info in properties)
             {
-                if (info.Property.PropertyType.BaseType == typeof(Enum))
+                string displayName = "";
+                if (info.Attribute != null && info.Attribute.ResourceType != null)
                 {
-                    dataTable.Columns.Add(new DataColumn(
-                        info.Attribute != null ? info.Attribute.DisplayName : info.Property.Name));
+                    var resourceType = (info.Attribute.ResourceType != null) ? (Type)info.Attribute.ResourceType : null;
+                    var decorationResx = new ComponentResourceManager(resourceType);
+                    displayName = decorationResx.GetString(info.Attribute.DisplayName);
+                    if (string.IsNullOrEmpty(displayName))
+                    {
+                        displayName = decorationResx.GetString(info.Attribute.DisplayName.Replace("_", " "));
+                    }
                 }
                 else
-                    dataTable.Columns.Add(new DataColumn(
-                        info.Attribute != null ? info.Attribute.DisplayName : info.Property.Name,
+                {
+                    displayName = info.Attribute.DisplayName;
+                }
+
+
+                if (info.Property.PropertyType.BaseType == typeof(Enum))
+                {
+                    dataTable.Columns.Add(new DataColumn(displayName));
+                }
+                else
+                    dataTable.Columns.Add(new DataColumn(displayName,
                         Nullable.GetUnderlyingType(info.Property.PropertyType) ?? info.Property.PropertyType));
             }
 
@@ -166,7 +181,7 @@ namespace EazyExcel
                 {
                     if (properties[i].Property.PropertyType.BaseType == typeof(Enum))
                     {
-                        var enumValue = GetDescription(properties[i].Property.PropertyType, properties[i].Property.GetValue(entity, null).ToString())?? properties[i].Property.GetValue(entity, null).ToString();
+                        var enumValue = GetDescription(properties[i].Property.PropertyType, properties[i].Property.GetValue(entity, null).ToString()) ?? properties[i].Property.GetValue(entity, null).ToString();
 
                         values[i] = enumValue;
                     }
