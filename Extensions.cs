@@ -23,7 +23,7 @@ namespace EazyExcel
             var worksheet = workbook.Worksheets.Add(sheetName);
 
             worksheet.Cell(1, 1).InsertTable(@this);
-            worksheet.Columns().AdjustToContents();
+            //worksheet.Columns().AdjustToContents();
             workbook.SaveAs(filePathAndName);
         }
         /// <summary>
@@ -195,7 +195,7 @@ namespace EazyExcel
                 dataTable.Rows.Add(values);
             }
             worksheet.Cell(1, 1).InsertTable(dataTable);
-            worksheet.Columns().AdjustToContents();
+            //worksheet.Columns().AdjustToContents();
             workbook.SaveAs(mem);
         }
 
